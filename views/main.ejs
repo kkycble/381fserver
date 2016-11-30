@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restaurant - Main Page</title>
+</head>
+<body>
+  <p>
+  <h1>Welcome!</h1>
+  <h2>You are now logged in as <%= userid%>. </h2>
+  <form action="/logout" method="get">
+    <input type="submit" value="Logout">
+  </form>
+  <p>
+  <form action="/api/create" method="get">
+    <input type="submit" value="New">
+  </form>
+  <p>
+  <form action="/api/read" method="get">
+    <input type="submit" value="Search">
+  </form>
+  
+</body>
+</html>
