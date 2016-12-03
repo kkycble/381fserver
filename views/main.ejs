@@ -16,11 +16,15 @@
     <input type="submit" value="New">
   </form>
   <p>
-  <form action="/api/read" method="get">
+  <form action="/search" method="get">
     <input type="submit" value="Search">
   </form>
+  <p>
+  <form action="/api/read" method="get">
+    <input type="submit" value="Reset Search">
+  </form>
   <br>
-  <h2>Showing <%= restaurants.length %> restaurant documents</h2>
+  <h2>Showing <%= restaurants.length %> restaurant documents, Criteria: {<%=c%>}</h2>
   <ul class="restaurants">
   <% for(var i=0; i<restaurants.length; i++) {%>
     <li class="restaurant">
@@ -30,5 +34,7 @@
   </ul>
 </body>
 </html>
+
+
 
   

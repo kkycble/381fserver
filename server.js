@@ -130,7 +130,92 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
         console.log(err);
         res.redirect('/');
       }
-      res.render('main.ejs', {userid: req.session.userid, restaurants: result})
+      var criteria = '';
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
+    })
+  })
+  
+  app.get('/api/read/name/:name', (req, res) => {
+    db.collection('restaurants').find({name: req.params.name}).toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      var criteria = 'Name: '+req.params.name;
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
+    })
+  })
+  
+  app.get('/api/read/borough/:borough', (req, res) => {
+    db.collection('restaurants').find({borough: req.params.borough}).toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      var criteria = 'Borough: '+req.params.borough;
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
+    })
+  })
+  
+  app.get('/api/read/cuisine/:cuisine', (req, res) => {
+    db.collection('restaurants').find({cuisine: req.params.cuisine}).toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      var criteria = 'Cuisine: '+req.params.cuisine;
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
+    })
+  })
+  
+  app.get('/api/read/name/:name/borough/:borough', (req, res) => {
+    db.collection('restaurants').find({name: req.params.name, borough: req.params.borough}).toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      var criteria = 'Name: '+req.params.name+', Borough: '+req.params.borough;
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
+    })
+  })
+  
+  app.get('/api/read/name/:name/cuisine/:cuisine', (req, res) => {
+    db.collection('restaurants').find({name: req.params.name, cuisine: req.params.cuisine}).toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      var criteria = 'Name: '+req.params.name+', Cuisine: '+req.params.cuisine;
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
+    })
+  })
+  
+  app.get('/api/read/borough/:borough/cuisine/:cuisine', (req, res) => {
+    db.collection('restaurants').find({borough: req.params.borough, cuisine: req.params.cuisine}).toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      var criteria = 'Borough: '+req.params.borough+', Cuisine: '+req.params.cuisine;
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
+    })
+  })
+  
+  app.get('/api/read/name/:name/borough/:borough/cuisine/:cuisine', (req, res) => {
+    db.collection('restaurants').find({name: req.params.name, borough: req.params.borough, cuisine: req.params.cuisine}).toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      var criteria = 'Name: '+req.params.name+', Borough: '+req.params.borough+', Cuisine: '+req.params.cuisine;
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result, c: criteria})
     })
   })
   
@@ -381,6 +466,52 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
         })
       }
       
+    }
+  })
+  
+  app.get('/search', (req, res) => {
+    res.writeHead(200, {"Content-Type": "text/html"});
+    res.write("<html><body>");
+    res.write("<h1>Search</h1><br><br>");
+    res.write("<form action=\"/search\" method=\"post\">");
+    res.write("Name: <br><input type=\"text\" name=\"name\"><br><br>");
+    res.write("Borough: <br><input type=\"text\" name=\"borough\"><br><br>");
+    res.write("Cuisine: <br><input type=\"text\" name=\"cuisine\"><br><br>");
+    res.write("<input type=\"submit\" value=\"Search\"></form>");
+    res.write("</body></html>");
+    res.end();
+  })
+  
+  app.post('/search', (req, res) => {
+    if(req.body.name == '' && req.body.borough == '' && req.body.cuisine == '') {
+      res.writeHead(500, {"Content-Type": "text/html"});
+      res.write("<html><body>");
+      res.write("<h1>Error: No search criteria found!</h1><br><br>");
+      res.write("<a href=/search> Go Back</a>");
+      res.write("</body></html>");
+      res.end();
+    } else {
+      var name;
+      var borough;
+      var cuisine;
+    
+      if(req.body.name != '') {
+        name = '/name/' + req.body.name;
+      } else {
+        name = '';
+      }
+      if(req.body.borough != '') {
+        borough = '/borough/' + req.body.borough;
+      } else {
+        borough = '';
+      }
+      if(req.body.cuisine != '') {
+        cuisine = '/cuisine/' + req.body.cuisine;
+      } else {
+        cuisine = '';
+      }
+      var queryString = '/api/read'+name+borough+cuisine;
+      res.redirect(decodeURI(queryString));
     }
   })
   
