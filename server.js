@@ -4,24 +4,113 @@ var app = express();
 var MongoClient = require('mongodb').MongoClient;
 var session = require('cookie-session');
 var fileUpload = require('express-fileupload');
+var fs = require('fs');
+var ObjectId = require('mongodb').ObjectID;
 
 MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (err, db) => {
   if (err) return console.log(err);
   app.listen(process.env.PORT || 8099, () => {
-    console.log('listening on port 8099')
+    console.log('listening on port 8099');
   })
 
-  app.use(bodyParser.urlencoded({extended : true}));
+  app.use(bodyParser.urlencoded({extended : false}));
+  app.use(fileUpload());
   app.set('view engine', 'ejs');
   app.use(express.static('/public'));
   app.use(bodyParser.json());
   app.use(session({name: 'session', secret: 'assgor is awesome'}));
   
+  app.get('/rate', (req, res) => {
+    if(req.query._id != '') {
+      /**res.writeHead(200, {"Content-Type": "text/html"});
+      res.send("<html><body>");
+      res.send("<h1>Rate</h1><br><br>");
+      res.send("<h2>Enter Score(1-10)</h2><br>");
+      res.send("<form action=\"/rate\" method=\"post\">");
+      res.send("<input type=\"text\" name=\"score\">");
+      res.send("<input type=\"submit\" value=\"rate\">");
+      res.send("</form>");
+      res.send("</body></html>");**/
+      res.render('rate.ejs', {_id: req.query._id});
+    }
+    else {
+      console.log('Error! cannot rate empty record');
+      res.writeHead(500, {"Content-Type": "text/html"});
+      res.write("<html><body>");
+      res.write("<h1>Error! cannot rate empty record</h1>");
+      res.write("<form action=\"/api/read\" method=\"get\">");
+      res.write("<input type=\"submit\" value=\"Back to Main Page\"></form>");
+      res.write("</body></html>");
+      res.end();
+    }
+  })
+  
+  app.post('/rate', (req, res) => {
+    var rated = false;
+  db.collection('restaurants').find({_id:ObjectId(req.body._id)}).toArray((err, result) => {
+    if (err) throw err;
+    var idResult = result;
+    /**
+    console.log(idResult[0].ratings);
+    console.log(idResult[0].ratings[0].rating.userid);
+    console.log(idResult[0].ratings[1].rating.userid);
+    console.log(idResult[0].ratings.length);
+    console.log('---------------------------------');
+    console.log(typeof(idResult[0].ratings));
+    console.log(typeof(''));
+    console.log(typeof(null));
+    **/
+    
+    
+    if (idResult[0].ratings != undefined ) {
+      console.log('for');
+      for (var i=0; i<idResult[0].ratings.length; i++) {
+        console.log('in for');
+        var id = idResult[0].ratings[i].rating.userid;
+        console.log(id);
+        if (id == req.session.userid) {
+          console.log('in for if');
+          rated = true;
+          break;
+        }
+      }
+    }
+    console.log(rated);
+    if (req.body.score == 1 || req.body.score == 2 || req.body.score == 3 || req.body.score == 4 || req.body.score == 5 || req.body.score == 6 || req.body.score == 7 || req.body.score == 8 || req.body.score == 9 || req.body.score == 10) {
+        if (rated != true) {
+      db.collection('restaurants').update({_id:ObjectId(req.body._id)}, {$push: {ratings: {rating: {userid: req.session.userid, score: req.body.score}}}}, (err, result) => {
+      if (err) throw err;
+      console.log('before redirect');
+      res.redirect('/display?_id='+req.body._id);
+    });
+    } else {
+      console.log('attempt to rate more than once');
+      res.writeHead(500, {"Content-Type": "text/html"});
+      res.write("<html><body>");
+      res.write("<h1>Error! You have rated this document already!</h1>");
+      res.write("<a href=/display?_id="+req.body._id+">Go Back</a>");
+      res.write("</body></html>");
+      res.end();
+    }
+        }
+        else{console.log('invalid input');
+      res.writeHead(500, {"Content-Type": "text/html"});
+      res.write("<html><body>");
+      res.write("<h1>Invalid Input! You can enter only 1 - 10!</h1>");
+      res.write("<a href=/display?_id="+req.body._id+">Go Back</a>");
+      res.write("</body></html>");
+      res.end();}
+    
+  });
+    
+  });
+                                        
+          
   app.get('/', (req, res) => {
     console.log(req.session);
     if(!req.session.authenticated) {
       res.redirect('/login');
-    } else res.redirect('/main');
+    } else res.redirect('/api/read');
   })
   
   app.get('/login', (req, res) => {
@@ -34,10 +123,44 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
     res.redirect('/');
   })
   
-  app.get('/main', (req, res) => {
-    //res.sendFile(__dirname + '/public/main.html');
-    res.render('main', {userid: req.session.userid});
+  app.get('/api/read', (req, res) => {
+    db.collection('restaurants').find().toArray((err, result) => {
+      console.log('&&&');
+      if (err) {
+        console.log(err);
+        res.redirect('/');
+      }
+      res.render('main.ejs', {userid: req.session.userid, restaurants: result})
+    })
   })
+  
+  app.get('/display', (req,res) => {
+    if(req.query._id != '') {
+      db.collection('restaurants').find({_id:ObjectId(req.query._id)}).toArray((err, result) =>{
+        console.log('***');
+        //console.log(result);
+        if(err) {
+          console.log(err);
+          res.redirect('/');
+        }
+        else if(result.length) {
+          console.log('record found');
+          console.log('render');
+          //console.log(result[0])
+          res.render('display.ejs', {r: result});
+        }
+        else {
+          console.log('record not found');
+          res.redirect('/');
+        }
+      });
+    }
+    else{
+      consore.log('id missing');
+      res.redirect('/');
+    }
+  });
+  
   
   app.get('/register', (req, res) => {
     res.sendFile(__dirname + '/public/register.html');
@@ -55,7 +178,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
         req.session.authenticated = true;
         req.session.userid = req.body.userid;
         console.log('userid of session: ' + req.session.userid);
-        res.redirect('/main');
+        res.redirect('/');
       }
       else {
         console.log('Invalid Username or Password');
@@ -70,6 +193,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
         res.write("<br>");
         res.write("<form action=\"/register\" method=\"get\">");
         res.write("<input type=\"submit\" value=\"Sign Up\"></form>");
+        res.write("</body></html>")
         res.end();
       }
     })
@@ -145,6 +269,119 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
         })
       }
     })
-    
   }})
+  app.get('/api/create', (req, res) => {
+    res.sendFile(__dirname + '/public/insert.html');
+  })
+  
+  app.post('/api/create', (req, res) => {
+    if(req.body.name == '') {
+      console.log('Error: Name field is empty');
+      /**res.writeHead(400, {"Content-Type": "text/html"});
+      res.write("<html><body>");
+      res.write("<h1>Error: Name field is empty</h1>");
+      res.write("<br>");
+      res.write("<form action=\"/api/create\" method=\"get\">");
+      res.write("<input type=\"submit\" value=\"Go Back\"></form>");
+      res.write("</body></html>");
+      res.write("<br>");
+      res.end(); **/
+      res.setHeader('Content-Type', 'application/json');
+      res.send(JSON.stringify({status: "failed"}, null, 3));
+      //res.json({status: "failed"});
+    } else
+      {
+        var data = new Buffer(req.files.photo.data).toString('base64');
+        var mimetype = req.files.photo.mimetype;
+        if (data == ''){mimetype = '';}
+        db.collection('restaurants').insert({name: req.body.name, borough: req.body.borough, cuisine: req.body.cuisine, address: {street: req.body.street, building: req.body.building, zipcode: req.body.zipcode, coord: {lat: req.body.lat, long: req.body.long}}, createdby: req.session.userid, photo: {data : data,
+    "mimetype" : mimetype}}, (err, result) => {
+          if(err) {
+            console.log(err);
+            res.redirect('/api/create');
+          } else {
+            console.log('Create Successful');
+            console.log(req.files.photo);
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({status: "ok", _id: result["ops"][0]["_id"]}, null, 3));
+          }
+        })
+      }
+  })
+  
+  app.get('/delete', (req, res) => {
+    if (req.query.user != req.session.userid) {
+      res.writeHead(500, {"Content-Type": "text/html"});
+      res.write("<html><body>");
+      res.write("<h1>Only author can delete this document!</h1>");
+      res.write("<br>");
+      res.write("<a href=/display?_id="+req.query._id+">Go Back</a>");
+      res.write("</body></html>");
+      res.end();
+    } else
+    {
+      db.collection('restaurants').remove({_id:ObjectId(req.query._id)}, (err, result) => {
+    if (err) throw err;
+    console.log(result);
+    res.writeHead(200, {"Content-Type": "text/html"});
+    res.write("<html><body>");
+    res.write("<h1>Delete Complete</h1><br><br>");
+    res.write("<a href=/> Back to Main Page</a>");
+    res.write("</body></html>");
+    res.end();
+  })
+    }
+  })
+  
+  app.get('/update', (req, res) => {
+    console.log('id debug');
+    console.log(req.query._id);
+    res.render('update.ejs', {_id: req.query._id, user: req.query.user});
+  })
+  
+  app.post('/update', (req, res) => {
+    console.log('req.body._id');
+    console.log(req.body._id);
+    console.log('===');
+    console.log(req.body.user);
+    if (req.body.user != req.session.userid) {
+      res.writeHead(500, {"Content-Type": "text/html"});
+      res.write("<html><body>");
+      res.write("<h1>Only author can update this document!</h1>");
+      res.write("<br>");
+      res.write("<a href=/display?_id="+req.body._id+">Go Back</a>");
+      res.write("</body></html>");
+      res.end();
+    }
+    else {
+      if (req.body.name == '') {
+        console.log('Update Error: Name field is empty');
+        res.writeHead(400, {"Content-Type": "text/html"});
+        res.write("<html><body>");
+        res.write("<h1>Update Error: Name field is empty</h1>");
+        res.write("<br>");
+        res.write("<a href=/display?_id="+req.body._id+">Go Back</a>");
+        res.write("</body></html>");
+        res.write("<br>");
+        res.end();
+      }
+      else {
+        var data = new Buffer(req.files.photo.data).toString('base64');
+        var mimetype = req.files.photo.mimetype;
+        if (data == ''){mimetype = '';}
+        db.collection('restaurants').update({_id:ObjectId(req.body._id)}, {$set: {name: req.body.name, borough: req.body.borough, cuisine: req.body.cuisine, address: {street: req.body.street, building: req.body.building, zipcode: req.body.zipcode, coord: {lat: req.body.lat, long: req.body.long}}, photo: {data: data, mimetype: mimetype}}}, (err, result) => {
+          if (err) throw err;
+          res.writeHead(200, {"Content-Type": "text/html"});
+          res.write("<html><body>");
+          res.write("<h1>Update Successful</h1>");
+          res.write("<br>");
+          res.write("<a href=/display?_id="+req.body._id+">Go Back</a>");
+          res.write("</body></html>");
+          res.end();
+        })
+      }
+      
+    }
+  })
+  
 })

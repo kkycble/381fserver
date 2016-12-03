@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Restaurant - Main Page</title>
+  <title>Restaurants - Main Page</title>
 </head>
 <body>
   <p>
@@ -19,6 +19,16 @@
   <form action="/api/read" method="get">
     <input type="submit" value="Search">
   </form>
-  
+  <br>
+  <h2>Showing <%= restaurants.length %> restaurant documents</h2>
+  <ul class="restaurants">
+  <% for(var i=0; i<restaurants.length; i++) {%>
+    <li class="restaurant">
+      <ul><a href=/display?_id=<%=restaurants[i]._id%>><%= restaurants[i].name %></a></ul>
+    </li>
+  <% } %>
+  </ul>
 </body>
 </html>
+
+  
