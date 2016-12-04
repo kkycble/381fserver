@@ -136,7 +136,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name', (req, res) => {
-    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i')}).toArray((err, result) => {
+    db.collection('restaurants').find({name: req.params.name}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -148,7 +148,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/borough/:borough', (req, res) => {
-    db.collection('restaurants').find({borough: new RegExp(req.params.borough, 'i')}).toArray((err, result) => {
+    db.collection('restaurants').find({borough: req.params.borough}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -160,7 +160,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
+    db.collection('restaurants').find({cuisine: req.params.cuisine}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -172,7 +172,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name/borough/:borough', (req, res) => {
-    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i'), borough: new RegExp(req.params.borough, 'i')}).toArray((err, result) => {
+    db.collection('restaurants').find({name: req.params.name, borough: req.params.borough}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -184,7 +184,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i'), cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
+    db.collection('restaurants').find({name: req.params.name, cuisine: req.params.cuisine}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -196,7 +196,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/borough/:borough/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({borough: new RegExp(req.params.borough, 'i'), cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
+    db.collection('restaurants').find({borough: req.params.borough, cuisine: req.params.cuisine}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -208,7 +208,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name/borough/:borough/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i'), borough: new RegExp(req.params.borough, 'i'), cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
+    db.collection('restaurants').find({name: req.params.name, borough: req.params.borough, cuisine: req.params.cuisine}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -395,17 +395,18 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/delete', (req, res) => {
-    if (req.query.user != req.session.userid) {
-      res.writeHead(500, {"Content-Type": "text/html"});
+    db.collection('restaurants').find({_id:ObjectId(req.query._id)}).toArray((err, result) => {
+      if (err) throw err;
+      if (result[0].createdby != req.session.userid) {
+        res.writeHead(500, {"Content-Type": "text/html"});
       res.write("<html><body>");
       res.write("<h1>Only author can delete this document!</h1>");
       res.write("<br>");
       res.write("<a href=/display?_id="+req.query._id+">Go Back</a>");
       res.write("</body></html>");
       res.end();
-    } else
-    {
-      db.collection('restaurants').remove({_id:ObjectId(req.query._id)}, (err, result) => {
+      } else {
+        db.collection('restaurants').remove({_id:ObjectId(req.query._id)}, (err, result) => {
     if (err) throw err;
     console.log(result);
     res.writeHead(200, {"Content-Type": "text/html"});
@@ -415,7 +416,8 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
     res.write("</body></html>");
     res.end();
   })
-    }
+      }
+    })
   })
   
   app.get('/update', (req, res) => {
@@ -425,20 +427,18 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.post('/update', (req, res) => {
-    console.log('req.body._id');
-    console.log(req.body._id);
-    console.log('===');
-    console.log(req.body.user);
-    if (req.body.user != req.session.userid) {
-      res.writeHead(500, {"Content-Type": "text/html"});
+    
+    db.collection('restaurants').find({_id:ObjectId(req.body._id)}).toArray((err, result) => {
+      if (err) throw err;
+      if (result[0].createdby != req.session.userid) {
+        res.writeHead(500, {"Content-Type": "text/html"});
       res.write("<html><body>");
       res.write("<h1>Only author can update this document!</h1>");
       res.write("<br>");
       res.write("<a href=/display?_id="+req.body._id+">Go Back</a>");
       res.write("</body></html>");
       res.end();
-    }
-    else {
+      } else {
       if (req.body.name == '') {
         console.log('Update Error: Name field is empty');
         res.writeHead(400, {"Content-Type": "text/html"});
@@ -467,6 +467,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
       }
       
     }
+    })
   })
   
   app.get('/search', (req, res) => {
