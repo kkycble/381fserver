@@ -136,7 +136,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name', (req, res) => {
-    db.collection('restaurants').find({name: req.params.name}).toArray((err, result) => {
+    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i')}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -148,7 +148,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/borough/:borough', (req, res) => {
-    db.collection('restaurants').find({borough: req.params.borough}).toArray((err, result) => {
+    db.collection('restaurants').find({borough: new RegExp(req.params.borough, 'i')}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -160,7 +160,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({cuisine: req.params.cuisine}).toArray((err, result) => {
+    db.collection('restaurants').find({cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -172,7 +172,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name/borough/:borough', (req, res) => {
-    db.collection('restaurants').find({name: req.params.name, borough: req.params.borough}).toArray((err, result) => {
+    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i'), borough: new RegExp(req.params.borough, 'i')}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -184,7 +184,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({name: req.params.name, cuisine: req.params.cuisine}).toArray((err, result) => {
+    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i'), cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -196,7 +196,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/borough/:borough/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({borough: req.params.borough, cuisine: req.params.cuisine}).toArray((err, result) => {
+    db.collection('restaurants').find({borough: new RegExp(req.params.borough, 'i'), cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -208,7 +208,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   })
   
   app.get('/api/read/name/:name/borough/:borough/cuisine/:cuisine', (req, res) => {
-    db.collection('restaurants').find({name: req.params.name, borough: req.params.borough, cuisine: req.params.cuisine}).toArray((err, result) => {
+    db.collection('restaurants').find({name: new RegExp(req.params.name, 'i'), borough: new RegExp(req.params.borough, 'i'), cuisine: new RegExp(req.params.cuisine, 'i')}).toArray((err, result) => {
       console.log('&&&');
       if (err) {
         console.log(err);
@@ -423,7 +423,7 @@ MongoClient.connect('mongodb://test:test@ds159747.mlab.com:59747/restaurants', (
   app.get('/update', (req, res) => {
     console.log('id debug');
     console.log(req.query._id);
-    res.render('update.ejs', {_id: req.query._id, user: req.query.user});
+    res.render('update.ejs', {_id: req.query._id});
   })
   
   app.post('/update', (req, res) => {
